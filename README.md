@@ -274,5 +274,5 @@ npx prisma studio
 
 ### Note
 
-This project currently stores passwords as plain text for learning/demo purposes.
-For production, always hash passwords using `bcrypt` before saving.
+<!-- This project currently stores passwords as plain text for learning/demo purposes.
+For production, always hash passwords using `bcrypt` before saving. -->
