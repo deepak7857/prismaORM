@@ -5,6 +5,13 @@ dotenv.config();
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
 const rateLimit=require('express-rate-limit');
+const cors=require('cors');
+
+app.use(cors({
+  origin: "http://localhost:3000",
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  credentials: true
+}));
 
 const limiter=rateLimit({
     windowMs:15*60*1000,

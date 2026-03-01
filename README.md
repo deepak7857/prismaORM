@@ -1,17 +1,15 @@
-# PostgreSQL + Prisma ORM CRUD API (Node.js + Express)
+# PostgreSQL + Prisma ORM CRUD API
 
-This project is a simple User CRUD API built with:
-- Node.js + Express
-- PostgreSQL database
-- Prisma ORM
+Simple User CRUD REST API built with Node.js, Express, PostgreSQL, and Prisma ORM.
 
 ## 1) Project Overview
 
-The API provides these operations:
-- Create user (`POST /api/user/register`)
-- Read users (`GET /api/user/users`)
-- Update user (`PUT /api/user/user/:id`)
-- Delete user (`DELETE /api/user/user/:id`)
+This API supports:
+
+- Create User: `POST /api/user/register`
+- Read Users: `GET /api/user/users`
+- Update User: `PUT /api/user/user/:id`
+- Delete User: `DELETE /api/user/user/:id`
 
 ## 2) Tech Stack
 
@@ -20,10 +18,12 @@ The API provides these operations:
 - `prisma`
 - `dotenv`
 - `express-validator`
+- `cors` (optional, if enabled)
+- `express-rate-limit` (optional, if enabled)
 
 ## 3) Project Structure
 
-```
+```text
 .
 ├── index.js
 ├── package.json
@@ -36,23 +36,16 @@ The API provides these operations:
 └── .env
 ```
 
-## 4) Database Configuration (PostgreSQL)
+## 4) Environment Configuration
 
-In `.env`:
+Create or update `.env`:
 
 ```env
 PORT=3000
 DATABASE_URL="postgresql://postgres:1234@localhost:5432/testdb"
 ```
 
-- DB provider: `postgresql`
-- Database name: `testdb`
-- Username: `postgres`
-- Password: `1234`
-- Host: `localhost`
-- Port: `5432`
-
-> Change credentials as per your local PostgreSQL setup.
+Update credentials for your local PostgreSQL setup.
 
 ## 5) Prisma Schema
 
@@ -78,56 +71,91 @@ model User {
 }
 ```
 
-## 6) Setup & Run
+## 6) Setup and Run
 
-### Step 1: Install dependencies
+### 1. Install dependencies
 
 ```bash
 npm install
 ```
 
-### Step 2: Create database in PostgreSQL (if not already created)
+If required:
+
+```bash
+npm install cors express-rate-limit
+```
+
+### 2. Create database
 
 ```sql
 CREATE DATABASE testdb;
 ```
 
-### Step 3: Run Prisma migration
+### 3. Run migration
 
 ```bash
 npx prisma migrate dev --name init
 ```
 
-### Step 4: (Optional) Open Prisma Studio
+### 4. Generate Prisma client
 
 ```bash
-npx prisma studio
+npx prisma generate
 ```
 
-### Step 5: Start server
+### 5. Start server
 
 ```bash
 npm start
 ```
 
-Server starts on:
-- `http://localhost:3000`
+Server URL:
 
-## 7) API Base URL
+```text
+http://localhost:3000
+```
+
+## 7) Optional Security Middleware
+
+Add this in `index.js` before route registration if you want CORS and request limiting.
+
+```js
+const cors = require('cors');
+const rateLimit = require('express-rate-limit');
+
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: 'Too many requests from this IP, please try again later.'
+});
+
+app.use(limiter);
+```
+
+For production, replace `origin: '*'` with your frontend domain.
+
+## 8) API Base URL
 
 ```text
 http://localhost:3000/api/user
 ```
 
-## 8) CRUD API Endpoints (Postman Ready)
+## 9) CRUD Endpoints (Postman)
 
-### A) Create User
+### A) Register User
 
-- **Method:** `POST`
-- **URL:** `http://localhost:3000/api/user/register`
-- **Headers:**
-  - `Content-Type: application/json`
-- **Body (raw JSON):**
+- Method: `POST`
+- URL: `http://localhost:3000/api/user/register`
+- Header: `Content-Type: application/json`
+- Body:
 
 ```json
 {
@@ -137,142 +165,69 @@ http://localhost:3000/api/user
 }
 ```
 
-**Success Response (201):**
+Responses:
 
-```json
-{
-  "message": "User registered successfully",
-  "user": {
-    "id": 1,
-    "name": "Deepak Kumar",
-    "email": "deepak_new@example.com",
-    "password": "secret123",
-    "createdAt": "...",
-    "updatedAt": "..."
-  }
-}
-```
-
-**Error Responses:**
-- `400` → `{"message":"All fields are required"}`
-- `409` → `{"message":"Email already exists"}`
-- `500` → `{"message":"Server error"}`
-
----
+- `201` User created
+- `400` Missing required fields
+- `409` Email already exists
+- `500` Server error
 
 ### B) Get All Users
 
-- **Method:** `GET`
-- **URL:** `http://localhost:3000/api/user/users`
-
-**Success Response (200):**
-
-```json
-[
-  {
-    "id": 1,
-    "name": "Deepak Kumar",
-    "email": "deepak_new@example.com",
-    "password": "secret123",
-    "createdAt": "...",
-    "updatedAt": "..."
-  }
-]
-```
-
----
+- Method: `GET`
+- URL: `http://localhost:3000/api/user/users`
 
 ### C) Update User
 
-- **Method:** `PUT`
-- **URL:** `http://localhost:3000/api/user/user/1`
-- **Headers:**
-  - `Content-Type: application/json`
-- **Body (raw JSON):**
+- Method: `PUT`
+- URL: `http://localhost:3000/api/user/user/:id`
+- Header: `Content-Type: application/json`
+- Body (example):
 
 ```json
 {
-  "name": "Deepak Updated",
-  "email": "deepak_updated@example.com",
-  "password": "newsecret123"
+  "name": "Updated Name"
 }
 ```
-
-You can also send only one field (for example only `name` or only `email`).
-
-**Success Response (200):**
-
-```json
-{
-  "message": "User updated successfully",
-  "user": {
-    "id": 1,
-    "name": "Deepak Updated",
-    "email": "deepak_updated@example.com",
-    "password": "newsecret123",
-    "createdAt": "...",
-    "updatedAt": "..."
-  }
-}
-```
-
-**Error Responses:**
-- `400` → `{"message":"At least one field (name, email, or password) is required to update"}`
-- `500` → `{"message":"Server error"}`
-
----
 
 ### D) Delete User
 
-- **Method:** `DELETE`
-- **URL:** `http://localhost:3000/api/user/user/1`
+- Method: `DELETE`
+- URL: `http://localhost:3000/api/user/user/:id`
 
-**Success Response (200):**
+## 10) Common Postman Issues
 
-```json
-{
-  "message": "User deleted successfully"
-}
-```
+If `GET /users` works but `POST /register` fails, verify:
 
-**Error Responses:**
-- `400` → `{"message":"User ID is required"}`
-- `500` → `{"message":"Server error"}`
-
-## 9) Common Postman Mistakes
-
-If `GET /users` works but `POST /register` does not, check:
-
-1. Method is `POST` (not `GET`).
-2. URL is exactly `/api/user/register`.
-3. Body is set to **raw + JSON**.
+1. Method is `POST`.
+2. URL is exactly `http://localhost:3000/api/user/register`.
+3. Body type is `raw` + `JSON`.
 4. Header includes `Content-Type: application/json`.
-5. Email is unique (same email returns `409`).
-6. Server is running (`npm start`).
+5. Email is unique.
+6. Server is running.
 
-## 10) Useful Prisma Commands
+## 11) Useful Prisma Commands
 
 ```bash
-# Apply schema changes to DB
 npx prisma migrate dev --name <migration_name>
-
-# Regenerate Prisma Client
 npx prisma generate
-
-# Open DB UI
 npx prisma studio
 ```
 
-## 11) Current Route Mapping
+## 12) Current Route Mapping
 
 - `POST /api/user/register`
 - `GET /api/user/users`
 - `PUT /api/user/user/:id`
 - `DELETE /api/user/user/:id`
 
----
+## 13) Note
 
-### Note
+This project currently stores passwords in plain text for learning/demo purposes.
 
-<!-- This project currently stores passwords as plain text for learning/demo purposes.
-For production, always hash passwords using `bcrypt` before saving. -->
+For production, hash passwords using `bcrypt` before saving.
+
+👨‍💻 Author
+Deepak Kumar
+
+Backend Developer | Node.js | PostgreSQL | Prisma ORM
