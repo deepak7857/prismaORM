@@ -4,7 +4,15 @@ const dotenv=require('dotenv');
 dotenv.config();
 const { PrismaClient } = require('@prisma/client');
 const prisma = new PrismaClient();
+const rateLimit=require('express-rate-limit');
 
+const limiter=rateLimit({
+    windowMs:15*60*1000,
+    max:10,
+    message:"Too many requests from this IP, please try again after 15 minutes"
+})
+app.use(limiter);
+app.use(express.json({extended:true}));
 
 const userRoutes=require('./routes/user');
 app.use(express.json());
